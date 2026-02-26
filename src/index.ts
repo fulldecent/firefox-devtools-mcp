@@ -216,6 +216,11 @@ const toolHandlers = new Map<
   // Firefox Preferences
   ['set_firefox_prefs', tools.handleSetFirefoxPrefs],
   ['get_firefox_prefs', tools.handleGetFirefoxPrefs],
+
+  // WebExtensions
+  ['install_extension', tools.handleInstallExtension],
+  ['uninstall_extension', tools.handleUninstallExtension],
+  ['list_extensions', tools.handleListExtensions],
 ]);
 
 // All tool definitions
@@ -274,6 +279,11 @@ const allTools = [
   // Firefox Preferences
   tools.setFirefoxPrefsTool,
   tools.getFirefoxPrefsTool,
+
+  // WebExtensions
+  tools.installExtensionTool,
+  tools.uninstallExtensionTool,
+  tools.listExtensionsTool,
 ];
 
 async function main() {
