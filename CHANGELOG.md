@@ -5,6 +5,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.7.1] - 2026-02-13
+
+### Fixed
+- Simplified `saveTo` parameter description in screenshot tools to remove opinionated usage instructions that were influencing AI assistant behavior
+
+## [0.7.0] - 2026-02-13
+
+### Added
+- **`saveTo` parameter for screenshot tools**: New optional parameter on `screenshot_page` and `screenshot_by_uid` that saves the screenshot to a local file instead of returning base64 image data in the MCP response
+  - Solves context window bloat in CLI-based MCP clients (e.g. Claude Code) where large base64 screenshots fill up the context quickly
+  - When `saveTo` is provided, returns a lightweight text response with the file path and size
+  - Automatically creates parent directories if they don't exist
+  - Follows the same pattern as Chrome DevTools MCP's `filePath` parameter
+
+### Changed
+- **Screenshot response format**: Without `saveTo`, screenshots are now returned as native MCP `image` content (`{ type: "image" }`) instead of raw base64 text. GUI clients (Claude Desktop, Cursor) render these natively.
+- Removed `buildScreenshotResponse` with its token-limit truncation — no longer needed since screenshots are either saved to file or returned as proper image content
+- Extended `McpToolResponse` type to support both `text` and `image` content items
+
+## [0.6.1] - 2026-02-04
+
+### Added
+- **Enhanced Vue/Livewire/Alpine.js support**: New snapshot options for modern JavaScript frameworks
+  - `includeAll` parameter: Include all visible elements without relevance filtering
+  - `selector` parameter: Scope snapshot to specific DOM subtree using CSS selector
+  - Fixes [#36](https://github.com/freema/firefox-devtools-mcp/issues/36) - DOM filtering problem with Vue and Livewire applications
+- **Test fixtures**: Added new HTML fixtures for testing visibility edge cases (`visibility.html`, `selector.html`)
+
+### Changed
+- **Improved element relevance detection**:
+  - Fixed text content checking to use direct text only (excluding descendants)
+  - Added check for interactive descendants to include wrapper elements
+  - Implemented "bubble-up" pattern in tree walker to preserve nested interactive elements
+  - Elements with `v-*`, `wire:*`, `x-*` attributes and custom components are now properly captured with `includeAll=true`
+
+### Fixed
+- **Visibility checking now considers ancestor elements**: Elements inside hidden parents (e.g., `display:none`, `visibility:hidden`) are now correctly excluded from snapshots, even in `includeAll` mode
+- **Opacity parsing improved**: Fixed opacity check to properly handle various numeric formats (`0`, `0.0`, `0.00`) by parsing as float instead of string comparison
+- **CSS selector error handling**: Invalid CSS selectors now return clear error messages (`"Invalid selector syntax"`) instead of generic `"Unknown error"`
+- Interactive elements deeply nested in non-relevant wrapper divs are now correctly captured
+- Container elements with large descendant text content no longer incorrectly filtered out
+- Custom HTML elements (Vue/Livewire components) are now visible in snapshots with `includeAll=true`
+
+## [0.6.0] - 2025-12-01
+
+Released on npm, see GitHub releases for details.
+
 ## [0.5.3] - 2025-01-30
 
 ### Added
@@ -135,6 +184,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - UID-based element referencing system
 - Headless mode support
 
+[0.7.1]: https://github.com/freema/firefox-devtools-mcp/compare/v0.7.0...v0.7.1
+[0.7.0]: https://github.com/freema/firefox-devtools-mcp/compare/v0.6.1...v0.7.0
+[0.6.1]: https://github.com/freema/firefox-devtools-mcp/compare/v0.6.0...v0.6.1
 [0.5.3]: https://github.com/freema/firefox-devtools-mcp/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/freema/firefox-devtools-mcp/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/freema/firefox-devtools-mcp/compare/v0.5.0...v0.5.1

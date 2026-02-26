@@ -109,12 +109,24 @@ You can pass flags or environment variables (names on the right):
 - Input: click/hover/fill/drag/upload/form fill
 - Network: list/get (ID‑first, filters, always‑on capture)
 - Console: list/clear
-- Screenshot: page/by uid
+- Screenshot: page/by uid (with optional `saveTo` for CLI environments)
 - Script: evaluate_script (content), evaluate_chrome_script (privileged)
 - Chrome Context: list/select chrome contexts (requires `MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1`)
 - WebExtension: install_extension, uninstall_extension, list_extensions (list requires `MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1`)
 - Firefox Management: get_firefox_info, get_firefox_output, restart_firefox, set_firefox_prefs, get_firefox_prefs
 - Utilities: accept/dismiss dialog, history back/forward, set viewport
+
+### Screenshot optimization for Claude Code
+
+When using screenshots in Claude Code CLI, the base64 image data can consume significant context.
+Use the `saveTo` parameter to save screenshots to disk instead:
+
+```
+screenshot_page({ saveTo: "/tmp/page.png" })
+screenshot_by_uid({ uid: "abc123", saveTo: "/tmp/element.png" })
+```
+
+The file can then be viewed with Claude Code's `Read` tool without impacting context size.
 
 ## Local development
 
