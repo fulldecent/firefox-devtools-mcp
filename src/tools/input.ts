@@ -276,7 +276,10 @@ export async function handleDragByUidToUid(args: unknown): Promise<McpToolRespon
 
 export async function handleFillFormByUid(args: unknown): Promise<McpToolResponse> {
   try {
-    const { pageId, elements } = args as { pageId: string; elements: Array<{ uid: string; value: string }> };
+    const { pageId, elements } = args as {
+      pageId: string;
+      elements: Array<{ uid: string; value: string }>;
+    };
 
     if (!pageId || typeof pageId !== 'string') {
       throw new Error('pageId parameter is required and must be a string');
