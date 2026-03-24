@@ -14,9 +14,9 @@ export const clickByUidTool = {
   inputSchema: {
     type: 'object',
     properties: {
-      pageIdx: {
-        type: 'number',
-        description: 'Tab index (from list_pages)',
+      pageId: {
+        type: 'string',
+        description: 'Stable tab ID from list_pages',
       },
       uid: {
         type: 'string',
@@ -27,7 +27,7 @@ export const clickByUidTool = {
         description: 'Double-click (default: false)',
       },
     },
-    required: ['pageIdx', 'uid'],
+    required: ['pageId', 'uid'],
   },
 };
 
@@ -37,16 +37,16 @@ export const hoverByUidTool = {
   inputSchema: {
     type: 'object',
     properties: {
-      pageIdx: {
-        type: 'number',
-        description: 'Tab index (from list_pages)',
+      pageId: {
+        type: 'string',
+        description: 'Stable tab ID from list_pages',
       },
       uid: {
         type: 'string',
         description: 'Element UID from snapshot',
       },
     },
-    required: ['pageIdx', 'uid'],
+    required: ['pageId', 'uid'],
   },
 };
 
@@ -56,9 +56,9 @@ export const fillByUidTool = {
   inputSchema: {
     type: 'object',
     properties: {
-      pageIdx: {
-        type: 'number',
-        description: 'Tab index (from list_pages)',
+      pageId: {
+        type: 'string',
+        description: 'Stable tab ID from list_pages',
       },
       uid: {
         type: 'string',
@@ -69,7 +69,7 @@ export const fillByUidTool = {
         description: 'Text to fill',
       },
     },
-    required: ['pageIdx', 'uid', 'value'],
+    required: ['pageId', 'uid', 'value'],
   },
 };
 
@@ -79,9 +79,9 @@ export const dragByUidToUidTool = {
   inputSchema: {
     type: 'object',
     properties: {
-      pageIdx: {
-        type: 'number',
-        description: 'Tab index (from list_pages)',
+      pageId: {
+        type: 'string',
+        description: 'Stable tab ID from list_pages',
       },
       fromUid: {
         type: 'string',
@@ -92,7 +92,7 @@ export const dragByUidToUidTool = {
         description: 'Target element UID',
       },
     },
-    required: ['pageIdx', 'fromUid', 'toUid'],
+    required: ['pageId', 'fromUid', 'toUid'],
   },
 };
 
@@ -102,9 +102,9 @@ export const fillFormByUidTool = {
   inputSchema: {
     type: 'object',
     properties: {
-      pageIdx: {
-        type: 'number',
-        description: 'Tab index (from list_pages)',
+      pageId: {
+        type: 'string',
+        description: 'Stable tab ID from list_pages',
       },
       elements: {
         type: 'array',
@@ -125,7 +125,7 @@ export const fillFormByUidTool = {
         },
       },
     },
-    required: ['pageIdx', 'elements'],
+    required: ['pageId', 'elements'],
   },
 };
 
@@ -135,9 +135,9 @@ export const uploadFileByUidTool = {
   inputSchema: {
     type: 'object',
     properties: {
-      pageIdx: {
-        type: 'number',
-        description: 'Tab index (from list_pages)',
+      pageId: {
+        type: 'string',
+        description: 'Stable tab ID from list_pages',
       },
       uid: {
         type: 'string',
@@ -148,17 +148,17 @@ export const uploadFileByUidTool = {
         description: 'Local file path',
       },
     },
-    required: ['pageIdx', 'uid', 'filePath'],
+    required: ['pageId', 'uid', 'filePath'],
   },
 };
 
 // Handlers
 export async function handleClickByUid(args: unknown): Promise<McpToolResponse> {
   try {
-    const { pageIdx, uid, dblClick } = args as { pageIdx: number; uid: string; dblClick?: boolean };
+    const { pageId, uid, dblClick } = args as { pageId: string; uid: string; dblClick?: boolean };
 
-    if (typeof pageIdx !== 'number') {
-      throw new Error('pageIdx parameter is required and must be a number');
+    if (!pageId || typeof pageId !== 'string') {
+      throw new Error('pageId parameter is required and must be a string');
     }
 
     if (!uid || typeof uid !== 'string') {
@@ -168,7 +168,7 @@ export async function handleClickByUid(args: unknown): Promise<McpToolResponse> 
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
 
-    await firefox.selectTab(pageIdx);
+    await firefox.selectTabByHandle(pageId);
     try {
       await firefox.clickByUid(uid, dblClick);
       return successResponse(`✅ ${dblClick ? 'dblclick' : 'click'} ${uid}`);
@@ -182,10 +182,10 @@ export async function handleClickByUid(args: unknown): Promise<McpToolResponse> 
 
 export async function handleHoverByUid(args: unknown): Promise<McpToolResponse> {
   try {
-    const { pageIdx, uid } = args as { pageIdx: number; uid: string };
+    const { pageId, uid } = args as { pageId: string; uid: string };
 
-    if (typeof pageIdx !== 'number') {
-      throw new Error('pageIdx parameter is required and must be a number');
+    if (!pageId || typeof pageId !== 'string') {
+      throw new Error('pageId parameter is required and must be a string');
     }
 
     if (!uid || typeof uid !== 'string') {
@@ -195,7 +195,7 @@ export async function handleHoverByUid(args: unknown): Promise<McpToolResponse> 
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
 
-    await firefox.selectTab(pageIdx);
+    await firefox.selectTabByHandle(pageId);
     try {
       await firefox.hoverByUid(uid);
       return successResponse(`✅ hover ${uid}`);
@@ -209,10 +209,10 @@ export async function handleHoverByUid(args: unknown): Promise<McpToolResponse> 
 
 export async function handleFillByUid(args: unknown): Promise<McpToolResponse> {
   try {
-    const { pageIdx, uid, value } = args as { pageIdx: number; uid: string; value: string };
+    const { pageId, uid, value } = args as { pageId: string; uid: string; value: string };
 
-    if (typeof pageIdx !== 'number') {
-      throw new Error('pageIdx parameter is required and must be a number');
+    if (!pageId || typeof pageId !== 'string') {
+      throw new Error('pageId parameter is required and must be a string');
     }
 
     if (!uid || typeof uid !== 'string') {
@@ -226,7 +226,7 @@ export async function handleFillByUid(args: unknown): Promise<McpToolResponse> {
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
 
-    await firefox.selectTab(pageIdx);
+    await firefox.selectTabByHandle(pageId);
     try {
       await firefox.fillByUid(uid, value);
       return successResponse(`✅ fill ${uid}`);
@@ -240,10 +240,10 @@ export async function handleFillByUid(args: unknown): Promise<McpToolResponse> {
 
 export async function handleDragByUidToUid(args: unknown): Promise<McpToolResponse> {
   try {
-    const { pageIdx, fromUid, toUid } = args as { pageIdx: number; fromUid: string; toUid: string };
+    const { pageId, fromUid, toUid } = args as { pageId: string; fromUid: string; toUid: string };
 
-    if (typeof pageIdx !== 'number') {
-      throw new Error('pageIdx parameter is required and must be a number');
+    if (!pageId || typeof pageId !== 'string') {
+      throw new Error('pageId parameter is required and must be a string');
     }
 
     if (!fromUid || typeof fromUid !== 'string') {
@@ -257,7 +257,7 @@ export async function handleDragByUidToUid(args: unknown): Promise<McpToolRespon
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
 
-    await firefox.selectTab(pageIdx);
+    await firefox.selectTabByHandle(pageId);
     try {
       await firefox.dragByUidToUid(fromUid, toUid);
       return successResponse(`✅ drag ${fromUid}→${toUid}`);
@@ -276,10 +276,10 @@ export async function handleDragByUidToUid(args: unknown): Promise<McpToolRespon
 
 export async function handleFillFormByUid(args: unknown): Promise<McpToolResponse> {
   try {
-    const { pageIdx, elements } = args as { pageIdx: number; elements: Array<{ uid: string; value: string }> };
+    const { pageId, elements } = args as { pageId: string; elements: Array<{ uid: string; value: string }> };
 
-    if (typeof pageIdx !== 'number') {
-      throw new Error('pageIdx parameter is required and must be a number');
+    if (!pageId || typeof pageId !== 'string') {
+      throw new Error('pageId parameter is required and must be a string');
     }
 
     if (!elements || !Array.isArray(elements) || elements.length === 0) {
@@ -299,7 +299,7 @@ export async function handleFillFormByUid(args: unknown): Promise<McpToolRespons
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
 
-    await firefox.selectTab(pageIdx);
+    await firefox.selectTabByHandle(pageId);
     try {
       await firefox.fillFormByUid(elements);
       return successResponse(`✅ filled ${elements.length} fields`);
@@ -317,10 +317,10 @@ export async function handleFillFormByUid(args: unknown): Promise<McpToolRespons
 
 export async function handleUploadFileByUid(args: unknown): Promise<McpToolResponse> {
   try {
-    const { pageIdx, uid, filePath } = args as { pageIdx: number; uid: string; filePath: string };
+    const { pageId, uid, filePath } = args as { pageId: string; uid: string; filePath: string };
 
-    if (typeof pageIdx !== 'number') {
-      throw new Error('pageIdx parameter is required and must be a number');
+    if (!pageId || typeof pageId !== 'string') {
+      throw new Error('pageId parameter is required and must be a string');
     }
 
     if (!uid || typeof uid !== 'string') {
@@ -334,7 +334,7 @@ export async function handleUploadFileByUid(args: unknown): Promise<McpToolRespo
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
 
-    await firefox.selectTab(pageIdx);
+    await firefox.selectTabByHandle(pageId);
     try {
       await firefox.uploadFileByUid(uid, filePath);
       return successResponse(`✅ upload ${uid}`);

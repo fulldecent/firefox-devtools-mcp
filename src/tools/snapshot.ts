@@ -15,9 +15,9 @@ export const takeSnapshotTool = {
   inputSchema: {
     type: 'object',
     properties: {
-      pageIdx: {
-        type: 'number',
-        description: 'Tab index (from list_pages)',
+      pageId: {
+        type: 'string',
+        description: 'Stable tab ID from list_pages',
       },
       maxLines: {
         type: 'number',
@@ -45,7 +45,7 @@ export const takeSnapshotTool = {
         description: 'CSS selector to scope snapshot to specific element (e.g., "#app")',
       },
     },
-    required: ['pageIdx'],
+    required: ['pageId'],
   },
 };
 
@@ -77,7 +77,7 @@ export const clearSnapshotTool = {
 export async function handleTakeSnapshot(args: unknown): Promise<McpToolResponse> {
   try {
     const {
-      pageIdx,
+      pageId,
       maxLines: requestedMaxLines = DEFAULT_SNAPSHOT_LINES,
       includeAttributes = false,
       includeText = true,
@@ -85,7 +85,7 @@ export async function handleTakeSnapshot(args: unknown): Promise<McpToolResponse
       includeAll = false,
       selector,
     } = (args as {
-      pageIdx: number;
+      pageId: string;
       maxLines?: number;
       includeAttributes?: boolean;
       includeText?: boolean;
@@ -94,8 +94,8 @@ export async function handleTakeSnapshot(args: unknown): Promise<McpToolResponse
       selector?: string;
     }) || {};
 
-    if (typeof pageIdx !== 'number') {
-      throw new Error('pageIdx parameter is required and must be a number');
+    if (!pageId || typeof pageId !== 'string') {
+      throw new Error('pageId parameter is required and must be a string');
     }
 
     // Apply hard cap on maxLines to prevent token overflow
@@ -105,7 +105,7 @@ export async function handleTakeSnapshot(args: unknown): Promise<McpToolResponse
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
 
-    await firefox.selectTab(pageIdx);
+    await firefox.selectTabByHandle(pageId);
 
     // Pass snapshot options to manager
     const snapshotOptions: any = {};

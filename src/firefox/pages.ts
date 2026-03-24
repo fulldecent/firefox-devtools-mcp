@@ -139,7 +139,23 @@ export class PageManagement {
   }
 
   /**
-   * Select tab by index
+   * Select tab by stable window handle
+   */
+  async selectTabByHandle(handle: string): Promise<void> {
+    const handles = await this.driver.getAllWindowHandles();
+    const index = handles.indexOf(handle);
+    if (index === -1) {
+      throw new Error(
+        `Page "${handle}" not found. Use list_pages to see available pages and their pageId values.`
+      );
+    }
+    await this.driver.switchTo().window(handle);
+    this.setCurrentContextId(handle);
+    this.cachedSelectedIdx = index;
+  }
+
+  /**
+   * Select tab by index (internal use / integration tests)
    */
   async selectTab(index: number): Promise<void> {
     const handles = await this.driver.getAllWindowHandles();
@@ -154,20 +170,39 @@ export class PageManagement {
   }
 
   /**
-   * Create new page (tab)
+   * Create new page (tab). Returns the stable window handle of the new tab.
    */
-  async createNewPage(url: string): Promise<number> {
+  async createNewPage(url: string): Promise<string> {
     await this.driver.switchTo().newWindow('tab');
     const handles = await this.driver.getAllWindowHandles();
-    const newIdx = handles.length - 1;
-    this.setCurrentContextId(handles[newIdx]!);
-    this.cachedSelectedIdx = newIdx;
+    const newHandle = handles[handles.length - 1]!;
+    this.setCurrentContextId(newHandle);
+    this.cachedSelectedIdx = handles.length - 1;
     await this.driver.get(url);
-    return newIdx;
+    return newHandle;
   }
 
   /**
-   * Close tab by index
+   * Close tab by stable window handle
+   */
+  async closeTabByHandle(handle: string): Promise<void> {
+    const handles = await this.driver.getAllWindowHandles();
+    if (!handles.includes(handle)) {
+      throw new Error(
+        `Page "${handle}" not found. Use list_pages to see available pages and their pageId values.`
+      );
+    }
+    await this.driver.switchTo().window(handle);
+    await this.driver.close();
+    const remaining = await this.driver.getAllWindowHandles();
+    if (remaining.length > 0) {
+      await this.driver.switchTo().window(remaining[0]!);
+      this.setCurrentContextId(remaining[0]!);
+    }
+  }
+
+  /**
+   * Close tab by index (internal use / integration tests)
    */
   async closeTab(index: number): Promise<void> {
     const handles = await this.driver.getAllWindowHandles();

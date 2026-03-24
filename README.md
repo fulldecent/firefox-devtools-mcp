@@ -104,14 +104,14 @@ You can pass flags or environment variables (names on the right):
 
 ## Tool overview
 
-All page-aware tools require an explicit `pageIdx` parameter (the tab index returned by `list_pages`). There is no hidden "selected page" state — every operation explicitly targets a specific tab. Use `list_pages` first to discover available tabs and their indices.
+All page-aware tools require an explicit `pageId` parameter — the stable window handle returned by `list_pages`. This handle is assigned by Firefox at tab-creation time and does not change if other tabs are opened or closed, making it safe to hold across multi-step workflows. Use `list_pages` first to discover available tabs and their stable IDs.
 
-- Pages: list/new/navigate/close (all page operations require explicit `pageIdx` from `list_pages`)
+- Pages: list/new/navigate/close (require stable `pageId` string from `list_pages`)
 - Snapshot/UID: take/resolve/clear
 - Input: click/hover/fill/drag/upload/form fill
 - Network: list/get (ID‑first, filters, always‑on capture)
 - Console: list/clear
-- Screenshot: page/by uid (requires `pageIdx`; with optional `saveTo` for CLI environments)
+- Screenshot: page/by uid (requires stable `pageId`; with optional `saveTo` for CLI environments)
 - Script: evaluate_script (content), evaluate_chrome_script (privileged)
 - Chrome Context: list/select chrome contexts (requires `MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1`)
 - WebExtension: install_extension, uninstall_extension, list_extensions (list requires `MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1`)
@@ -124,8 +124,8 @@ When using screenshots in Claude Code CLI, the base64 image data can consume sig
 Use the `saveTo` parameter to save screenshots to disk instead:
 
 ```
-screenshot_page({ pageIdx: 0, saveTo: "/tmp/page.png" })
-screenshot_by_uid({ pageIdx: 0, uid: "abc123", saveTo: "/tmp/element.png" })
+screenshot_page({ pageId: "<handle>", saveTo: "/tmp/page.png" })
+screenshot_by_uid({ pageId: "<handle>", uid: "abc123", saveTo: "/tmp/element.png" })
 ```
 
 The file can then be viewed with Claude Code's `Read` tool without impacting context size.

@@ -34,7 +34,7 @@ describe('Snapshot Tools', () => {
     it('takeSnapshotTool should have snapshot options', () => {
       const { properties } = takeSnapshotTool.inputSchema;
       expect(properties).toBeDefined();
-      expect(properties?.pageIdx).toBeDefined();
+      expect(properties?.pageId).toBeDefined();
       expect(properties?.maxLines).toBeDefined();
       expect(properties?.includeAttributes).toBeDefined();
       expect(properties?.includeText).toBeDefined();
@@ -43,12 +43,12 @@ describe('Snapshot Tools', () => {
 
     it('takeSnapshotTool options should have correct types', () => {
       const { properties, required } = takeSnapshotTool.inputSchema;
-      expect(properties?.pageIdx.type).toBe('number');
+      expect(properties?.pageId.type).toBe('string');
       expect(properties?.maxLines.type).toBe('number');
       expect(properties?.includeAttributes.type).toBe('boolean');
       expect(properties?.includeText.type).toBe('boolean');
       expect(properties?.maxDepth.type).toBe('number');
-      expect(required).toContain('pageIdx');
+      expect(required).toContain('pageId');
     });
 
     it('resolveUidToSelectorTool should require uid', () => {

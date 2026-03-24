@@ -35,14 +35,14 @@ describe('Pages Tools', () => {
   });
 
   describe('Schema Properties', () => {
-    it('navigatePageTool should require pageIdx and url', () => {
+    it('navigatePageTool should require stable pageId (string) and url', () => {
       const { properties, required } = navigatePageTool.inputSchema;
       expect(properties).toBeDefined();
-      expect(properties?.pageIdx).toBeDefined();
-      expect(properties?.pageIdx.type).toBe('number');
+      expect(properties?.pageId).toBeDefined();
+      expect(properties?.pageId.type).toBe('string');
       expect(properties?.url).toBeDefined();
       expect(properties?.url.type).toBe('string');
-      expect(required).toContain('pageIdx');
+      expect(required).toContain('pageId');
       expect(required).toContain('url');
     });
 
@@ -52,11 +52,12 @@ describe('Pages Tools', () => {
       expect(properties?.url).toBeDefined();
     });
 
-    it('closePageTool should require pageIdx', () => {
+    it('closePageTool should require stable pageId (string)', () => {
       const { properties, required } = closePageTool.inputSchema;
       expect(properties).toBeDefined();
-      expect(properties?.pageIdx).toBeDefined();
-      expect(required).toContain('pageIdx');
+      expect(properties?.pageId).toBeDefined();
+      expect(properties?.pageId.type).toBe('string');
+      expect(required).toContain('pageId');
     });
   });
 });

@@ -12,16 +12,16 @@ export const acceptDialogTool = {
   inputSchema: {
     type: 'object',
     properties: {
-      pageIdx: {
-        type: 'number',
-        description: 'Tab index (from list_pages)',
+      pageId: {
+        type: 'string',
+        description: 'Stable tab ID from list_pages',
       },
       promptText: {
         type: 'string',
         description: 'Text for prompt dialogs',
       },
     },
-    required: ['pageIdx'],
+    required: ['pageId'],
   },
 };
 
@@ -31,12 +31,12 @@ export const dismissDialogTool = {
   inputSchema: {
     type: 'object',
     properties: {
-      pageIdx: {
-        type: 'number',
-        description: 'Tab index (from list_pages)',
+      pageId: {
+        type: 'string',
+        description: 'Stable tab ID from list_pages',
       },
     },
-    required: ['pageIdx'],
+    required: ['pageId'],
   },
 };
 
@@ -47,9 +47,9 @@ export const navigateHistoryTool = {
   inputSchema: {
     type: 'object',
     properties: {
-      pageIdx: {
-        type: 'number',
-        description: 'Tab index (from list_pages)',
+      pageId: {
+        type: 'string',
+        description: 'Stable tab ID from list_pages',
       },
       direction: {
         type: 'string',
@@ -57,7 +57,7 @@ export const navigateHistoryTool = {
         description: 'back or forward',
       },
     },
-    required: ['pageIdx', 'direction'],
+    required: ['pageId', 'direction'],
   },
 };
 
@@ -68,9 +68,9 @@ export const setViewportSizeTool = {
   inputSchema: {
     type: 'object',
     properties: {
-      pageIdx: {
-        type: 'number',
-        description: 'Tab index (from list_pages)',
+      pageId: {
+        type: 'string',
+        description: 'Stable tab ID from list_pages',
       },
       width: {
         type: 'number',
@@ -81,23 +81,23 @@ export const setViewportSizeTool = {
         description: 'Height in pixels',
       },
     },
-    required: ['pageIdx', 'width', 'height'],
+    required: ['pageId', 'width', 'height'],
   },
 };
 
 // Handlers - Dialogs
 export async function handleAcceptDialog(args: unknown): Promise<McpToolResponse> {
   try {
-    const { pageIdx, promptText } = (args as { pageIdx: number; promptText?: string }) || {};
+    const { pageId, promptText } = (args as { pageId: string; promptText?: string }) || {};
 
-    if (typeof pageIdx !== 'number') {
-      throw new Error('pageIdx parameter is required and must be a number');
+    if (!pageId || typeof pageId !== 'string') {
+      throw new Error('pageId parameter is required and must be a string');
     }
 
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
 
-    await firefox.selectTab(pageIdx);
+    await firefox.selectTabByHandle(pageId);
     try {
       await firefox.acceptDialog(promptText);
       return successResponse(promptText ? `✅ Accepted: "${promptText}"` : '✅ Accepted');
@@ -118,16 +118,16 @@ export async function handleAcceptDialog(args: unknown): Promise<McpToolResponse
 
 export async function handleDismissDialog(args: unknown): Promise<McpToolResponse> {
   try {
-    const { pageIdx } = (args as { pageIdx: number }) || {};
+    const { pageId } = (args as { pageId: string }) || {};
 
-    if (typeof pageIdx !== 'number') {
-      throw new Error('pageIdx parameter is required and must be a number');
+    if (!pageId || typeof pageId !== 'string') {
+      throw new Error('pageId parameter is required and must be a string');
     }
 
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
 
-    await firefox.selectTab(pageIdx);
+    await firefox.selectTabByHandle(pageId);
     try {
       await firefox.dismissDialog();
       return successResponse('✅ Dismissed');
@@ -149,10 +149,10 @@ export async function handleDismissDialog(args: unknown): Promise<McpToolRespons
 // Handlers - History
 export async function handleNavigateHistory(args: unknown): Promise<McpToolResponse> {
   try {
-    const { pageIdx, direction } = args as { pageIdx: number; direction: 'back' | 'forward' };
+    const { pageId, direction } = args as { pageId: string; direction: 'back' | 'forward' };
 
-    if (typeof pageIdx !== 'number') {
-      throw new Error('pageIdx parameter is required and must be a number');
+    if (!pageId || typeof pageId !== 'string') {
+      throw new Error('pageId parameter is required and must be a string');
     }
 
     if (!direction || (direction !== 'back' && direction !== 'forward')) {
@@ -162,7 +162,7 @@ export async function handleNavigateHistory(args: unknown): Promise<McpToolRespo
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
 
-    await firefox.selectTab(pageIdx);
+    await firefox.selectTabByHandle(pageId);
     if (direction === 'back') {
       await firefox.navigateBack();
     } else {
@@ -178,10 +178,10 @@ export async function handleNavigateHistory(args: unknown): Promise<McpToolRespo
 // Handlers - Viewport
 export async function handleSetViewportSize(args: unknown): Promise<McpToolResponse> {
   try {
-    const { pageIdx, width, height } = args as { pageIdx: number; width: number; height: number };
+    const { pageId, width, height } = args as { pageId: string; width: number; height: number };
 
-    if (typeof pageIdx !== 'number') {
-      throw new Error('pageIdx parameter is required and must be a number');
+    if (!pageId || typeof pageId !== 'string') {
+      throw new Error('pageId parameter is required and must be a string');
     }
 
     if (typeof width !== 'number' || width <= 0) {
@@ -195,7 +195,7 @@ export async function handleSetViewportSize(args: unknown): Promise<McpToolRespo
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
 
-    await firefox.selectTab(pageIdx);
+    await firefox.selectTabByHandle(pageId);
     await firefox.setViewportSize(width, height);
 
     return successResponse(`✅ ${width}x${height}`);

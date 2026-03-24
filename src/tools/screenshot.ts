@@ -21,13 +21,13 @@ export const screenshotPageTool = {
   inputSchema: {
     type: 'object',
     properties: {
-      pageIdx: {
-        type: 'number',
-        description: 'Tab index (from list_pages)',
+      pageId: {
+        type: 'string',
+        description: 'Stable tab ID from list_pages',
       },
       saveTo: SAVE_TO_SCHEMA,
     },
-    required: ['pageIdx'],
+    required: ['pageId'],
   },
 };
 
@@ -37,9 +37,9 @@ export const screenshotByUidTool = {
   inputSchema: {
     type: 'object',
     properties: {
-      pageIdx: {
-        type: 'number',
-        description: 'Tab index (from list_pages)',
+      pageId: {
+        type: 'string',
+        description: 'Stable tab ID from list_pages',
       },
       uid: {
         type: 'string',
@@ -47,7 +47,7 @@ export const screenshotByUidTool = {
       },
       saveTo: SAVE_TO_SCHEMA,
     },
-    required: ['pageIdx', 'uid'],
+    required: ['pageId', 'uid'],
   },
 };
 
@@ -83,16 +83,16 @@ function imageResponse(base64Png: string): McpToolResponse {
 // Handlers
 export async function handleScreenshotPage(args: unknown): Promise<McpToolResponse> {
   try {
-    const { pageIdx, saveTo } = (args ?? {}) as { pageIdx: number; saveTo?: string };
+    const { pageId, saveTo } = (args ?? {}) as { pageId: string; saveTo?: string };
 
-    if (typeof pageIdx !== 'number') {
-      throw new Error('pageIdx parameter is required and must be a number');
+    if (!pageId || typeof pageId !== 'string') {
+      throw new Error('pageId parameter is required and must be a string');
     }
 
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
 
-    await firefox.selectTab(pageIdx);
+    await firefox.selectTabByHandle(pageId);
     const base64Png = await firefox.takeScreenshotPage();
 
     if (!base64Png || typeof base64Png !== 'string') {
@@ -111,10 +111,10 @@ export async function handleScreenshotPage(args: unknown): Promise<McpToolRespon
 
 export async function handleScreenshotByUid(args: unknown): Promise<McpToolResponse> {
   try {
-    const { pageIdx, uid, saveTo } = args as { pageIdx: number; uid: string; saveTo?: string };
+    const { pageId, uid, saveTo } = args as { pageId: string; uid: string; saveTo?: string };
 
-    if (typeof pageIdx !== 'number') {
-      throw new Error('pageIdx parameter is required and must be a number');
+    if (!pageId || typeof pageId !== 'string') {
+      throw new Error('pageId parameter is required and must be a string');
     }
 
     if (!uid || typeof uid !== 'string') {
@@ -124,7 +124,7 @@ export async function handleScreenshotByUid(args: unknown): Promise<McpToolRespo
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
 
-    await firefox.selectTab(pageIdx);
+    await firefox.selectTabByHandle(pageId);
 
     try {
       const base64Png = await firefox.takeScreenshotByUid(uid);
