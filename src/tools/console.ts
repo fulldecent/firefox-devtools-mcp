@@ -17,6 +17,10 @@ export const listConsoleMessagesTool = {
   inputSchema: {
     type: 'object',
     properties: {
+      pageIdx: {
+        type: 'number',
+        description: 'Tab index (0-based) from list_pages',
+      },
       level: {
         type: 'string',
         enum: ['debug', 'info', 'warn', 'error'],
@@ -44,6 +48,7 @@ export const listConsoleMessagesTool = {
         description: 'Output format (default: text)',
       },
     },
+    required: ['pageIdx'],
   },
 };
 
@@ -52,7 +57,13 @@ export const clearConsoleMessagesTool = {
   description: 'Clear collected console messages.',
   inputSchema: {
     type: 'object',
-    properties: {},
+    properties: {
+      pageIdx: {
+        type: 'number',
+        description: 'Tab index (0-based) from list_pages',
+      },
+    },
+    required: ['pageIdx'],
   },
 };
 
@@ -69,23 +80,36 @@ const DEFAULT_LIMIT = 50;
 export async function handleListConsoleMessages(args: unknown): Promise<McpToolResponse> {
   try {
     const {
+      pageIdx,
       level,
       limit,
       sinceMs,
       textContains,
       source,
       format = 'text',
-    } = (args as {
+    } = args as {
+      pageIdx: number;
       level?: string;
       limit?: number;
       sinceMs?: number;
       textContains?: string;
       source?: string;
       format?: 'text' | 'json';
-    }) || {};
+    };
+
+    if (typeof pageIdx !== 'number') {
+      throw new Error('pageIdx parameter is required and must be a number');
+    }
 
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
+
+    await firefox.refreshTabs();
+    const tabs = firefox.getTabs();
+    if (pageIdx < 0 || pageIdx >= tabs.length) {
+      throw new Error(`Page [${pageIdx}] not found. ${tabs.length} pages available.`);
+    }
+    await firefox.selectTab(pageIdx);
 
     let messages = await firefox.getConsoleMessages();
     const totalCount = messages.length;
@@ -227,10 +251,23 @@ export async function handleListConsoleMessages(args: unknown): Promise<McpToolR
   }
 }
 
-export async function handleClearConsoleMessages(_args: unknown): Promise<McpToolResponse> {
+export async function handleClearConsoleMessages(args: unknown): Promise<McpToolResponse> {
   try {
+    const { pageIdx } = args as { pageIdx: number };
+
+    if (typeof pageIdx !== 'number') {
+      throw new Error('pageIdx parameter is required and must be a number');
+    }
+
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
+
+    await firefox.refreshTabs();
+    const tabs = firefox.getTabs();
+    if (pageIdx < 0 || pageIdx >= tabs.length) {
+      throw new Error(`Page [${pageIdx}] not found. ${tabs.length} pages available.`);
+    }
+    await firefox.selectTab(pageIdx);
 
     const count = (await firefox.getConsoleMessages()).length;
     firefox.clearConsoleMessages();

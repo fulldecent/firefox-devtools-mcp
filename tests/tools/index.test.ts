@@ -22,9 +22,8 @@ describe('Tools Index', () => {
       expect(tools.navigatePageTool.name).toBe('navigate_page');
     });
 
-    it('should export selectPageTool', () => {
-      expect(tools.selectPageTool).toBeDefined();
-      expect(tools.selectPageTool.name).toBe('select_page');
+    it('should not export selectPageTool', () => {
+      expect((tools as Record<string, unknown>).selectPageTool).toBeUndefined();
     });
 
     it('should export closePageTool', () => {
@@ -39,8 +38,7 @@ describe('Tools Index', () => {
       expect(typeof tools.handleNewPage).toBe('function');
       expect(tools.handleNavigatePage).toBeDefined();
       expect(typeof tools.handleNavigatePage).toBe('function');
-      expect(tools.handleSelectPage).toBeDefined();
-      expect(typeof tools.handleSelectPage).toBe('function');
+      expect((tools as Record<string, unknown>).handleSelectPage).toBeUndefined();
       expect(tools.handleClosePage).toBeDefined();
       expect(typeof tools.handleClosePage).toBe('function');
     });

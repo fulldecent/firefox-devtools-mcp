@@ -11,6 +11,10 @@ export const evaluateScriptTool = {
   inputSchema: {
     type: 'object',
     properties: {
+      pageIdx: {
+        type: 'number',
+        description: 'Tab index (0-based) from list_pages',
+      },
       function: {
         type: 'string',
         description: 'JS function string, e.g. () => document.title',
@@ -34,7 +38,7 @@ export const evaluateScriptTool = {
         description: 'Timeout in ms (default: 5000)',
       },
     },
-    required: ['function'],
+    required: ['pageIdx', 'function'],
   },
 };
 
@@ -80,20 +84,35 @@ function validateFunction(fnString: string): void {
 export async function handleEvaluateScript(args: unknown): Promise<McpToolResponse> {
   try {
     const {
+      pageIdx,
       function: fnString,
       args: fnArgs,
       timeout,
     } = args as {
+      pageIdx: number;
       function: string;
       args?: Array<{ uid: string }>;
       timeout?: number;
     };
+
+    if (typeof pageIdx !== 'number') {
+      throw new Error('pageIdx parameter is required and must be a number');
+    }
 
     // Validate function
     validateFunction(fnString);
 
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
+
+    // Select the specified tab
+    await firefox.refreshTabs();
+    const tabs = firefox.getTabs();
+    if (pageIdx < 0 || pageIdx >= tabs.length) {
+      throw new Error(`Page [${pageIdx}] not found. ${tabs.length} pages available.`);
+    }
+    await firefox.selectTab(pageIdx);
+
     const driver = firefox.getDriver();
 
     if (!driver) {
@@ -156,7 +175,8 @@ export async function handleEvaluateScript(args: unknown): Promise<McpToolRespon
 
     // Enhance timeout errors
     if (errorMsg.includes('timeout') || errorMsg.includes('Timeout')) {
-      const timeoutValue = (args as { timeout?: number })?.timeout ?? DEFAULT_TIMEOUT;
+      const timeoutValue =
+        (args as { pageIdx: number; timeout?: number })?.timeout ?? DEFAULT_TIMEOUT;
       return errorResponse(
         new Error(
           `Script execution timed out (exceeded ${timeoutValue}ms).\n\n` +

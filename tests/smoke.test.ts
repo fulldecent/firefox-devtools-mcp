@@ -48,18 +48,14 @@ describe('Smoke Tests', () => {
 
   describe('Tool schemas', () => {
     it('should have valid inputSchema for pages tools', async () => {
-      const { listPagesTool, selectPageTool, navigatePageTool } = await import(
-        '../src/tools/pages.js'
-      );
+      const { listPagesTool, navigatePageTool } = await import('../src/tools/pages.js');
 
       expect(listPagesTool.inputSchema).toBeDefined();
       expect(listPagesTool.inputSchema.type).toBe('object');
 
-      expect(selectPageTool.inputSchema).toBeDefined();
-      expect(selectPageTool.inputSchema.type).toBe('object');
-
       expect(navigatePageTool.inputSchema).toBeDefined();
       expect(navigatePageTool.inputSchema.type).toBe('object');
+      expect(navigatePageTool.inputSchema.required).toContain('pageIdx');
     });
 
     it('should have valid inputSchema for snapshot tool', async () => {

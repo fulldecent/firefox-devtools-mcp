@@ -18,6 +18,10 @@ export const listNetworkRequestsTool = {
   inputSchema: {
     type: 'object' as const,
     properties: {
+      pageIdx: {
+        type: 'number',
+        description: 'Tab index (0-based) from list_pages',
+      },
       limit: {
         type: 'number',
         description: 'Max requests (default: 50)',
@@ -70,6 +74,7 @@ export const listNetworkRequestsTool = {
         description: 'Output format (default: text)',
       },
     },
+    required: ['pageIdx'],
   },
 };
 
@@ -79,6 +84,10 @@ export const getNetworkRequestTool = {
   inputSchema: {
     type: 'object' as const,
     properties: {
+      pageIdx: {
+        type: 'number',
+        description: 'Tab index (0-based) from list_pages',
+      },
       id: {
         type: 'string',
         description: 'Request ID from list_network_requests',
@@ -93,6 +102,7 @@ export const getNetworkRequestTool = {
         description: 'Output format (default: text)',
       },
     },
+    required: ['pageIdx'],
   },
 };
 
@@ -100,6 +110,7 @@ export const getNetworkRequestTool = {
 export async function handleListNetworkRequests(args: unknown): Promise<McpToolResponse> {
   try {
     const {
+      pageIdx,
       limit = 50,
       sinceMs,
       urlContains,
@@ -113,6 +124,7 @@ export async function handleListNetworkRequests(args: unknown): Promise<McpToolR
       detail = 'summary',
       format = 'text',
     } = (args as {
+      pageIdx: number;
       limit?: number;
       sinceMs?: number;
       urlContains?: string;
@@ -127,8 +139,19 @@ export async function handleListNetworkRequests(args: unknown): Promise<McpToolR
       format?: 'text' | 'json';
     }) || {};
 
+    if (typeof pageIdx !== 'number') {
+      throw new Error('pageIdx parameter is required and must be a number');
+    }
+
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
+
+    await firefox.refreshTabs();
+    const tabs = firefox.getTabs();
+    if (pageIdx < 0 || pageIdx >= tabs.length) {
+      throw new Error(`Page [${pageIdx}] not found. ${tabs.length} pages available.`);
+    }
+    await firefox.selectTab(pageIdx);
 
     let requests = await firefox.getNetworkRequests();
 
@@ -279,10 +302,15 @@ export async function handleListNetworkRequests(args: unknown): Promise<McpToolR
 export async function handleGetNetworkRequest(args: unknown): Promise<McpToolResponse> {
   try {
     const {
+      pageIdx,
       id,
       url,
       format = 'text',
-    } = args as { id?: string; url?: string; format?: 'text' | 'json' };
+    } = args as { pageIdx: number; id?: string; url?: string; format?: 'text' | 'json' };
+
+    if (typeof pageIdx !== 'number') {
+      throw new Error('pageIdx parameter is required and must be a number');
+    }
 
     if (!id && !url) {
       return errorResponse('id or url required');
@@ -290,6 +318,13 @@ export async function handleGetNetworkRequest(args: unknown): Promise<McpToolRes
 
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
+
+    await firefox.refreshTabs();
+    const tabs = firefox.getTabs();
+    if (pageIdx < 0 || pageIdx >= tabs.length) {
+      throw new Error(`Page [${pageIdx}] not found. ${tabs.length} pages available.`);
+    }
+    await firefox.selectTab(pageIdx);
 
     const requests = await firefox.getNetworkRequests();
     let request = null;

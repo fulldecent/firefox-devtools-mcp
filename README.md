@@ -80,7 +80,7 @@ npx @modelcontextprotocol/inspector npx firefox-devtools-mcp@latest --start-url 
 ```
 
 Then call tools like:
-- `list_pages`, `select_page`, `navigate_page`
+- `list_pages`, `navigate_page`
 - `take_snapshot` then `click_by_uid` / `fill_by_uid`
 - `list_network_requests` (always‑on capture), `get_network_request`
 - `screenshot_page`, `list_console_messages`
@@ -104,7 +104,7 @@ You can pass flags or environment variables (names on the right):
 
 ## Tool overview
 
-- Pages: list/new/navigate/select/close
+- Pages: list/new/navigate/close (each page-aware tool requires `pageIdx` from `list_pages`)
 - Snapshot/UID: take/resolve/clear
 - Input: click/hover/fill/drag/upload/form fill
 - Network: list/get (ID‑first, filters, always‑on capture)
@@ -115,6 +115,21 @@ You can pass flags or environment variables (names on the right):
 - WebExtension: install_extension, uninstall_extension, list_extensions (list requires `MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1`)
 - Firefox Management: get_firefox_info, get_firefox_output, restart_firefox, set_firefox_prefs, get_firefox_prefs
 - Utilities: accept/dismiss dialog, history back/forward, set viewport
+
+### Stateless page targeting
+
+Every tool that acts on a specific tab requires a `pageIdx` parameter (the 0-based tab index from `list_pages`). There is no hidden "selected page" state — each call explicitly names its target:
+
+```
+list_pages()                                    # → [0] GitHub, [1] MDN
+navigate_page({ pageIdx: 1, url: "https://example.com" })
+take_snapshot({ pageIdx: 0 })
+click_by_uid({ pageIdx: 0, uid: "abc123" })
+screenshot_page({ pageIdx: 1 })
+list_console_messages({ pageIdx: 0 })
+```
+
+Tools that are inherently global (`list_pages`, `new_page`, `get_firefox_info`, etc.) do not require `pageIdx`.
 
 ### Screenshot optimization for Claude Code
 

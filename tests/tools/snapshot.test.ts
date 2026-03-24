@@ -31,13 +31,16 @@ describe('Snapshot Tools', () => {
   });
 
   describe('Schema Properties', () => {
-    it('takeSnapshotTool should have snapshot options', () => {
-      const { properties } = takeSnapshotTool.inputSchema;
+    it('takeSnapshotTool should require pageIdx and have snapshot options', () => {
+      const { properties, required } = takeSnapshotTool.inputSchema;
       expect(properties).toBeDefined();
+      expect(properties?.pageIdx).toBeDefined();
+      expect(properties?.pageIdx.type).toBe('number');
       expect(properties?.maxLines).toBeDefined();
       expect(properties?.includeAttributes).toBeDefined();
       expect(properties?.includeText).toBeDefined();
       expect(properties?.maxDepth).toBeDefined();
+      expect(required).toContain('pageIdx');
     });
 
     it('takeSnapshotTool options should have correct types', () => {
@@ -48,11 +51,20 @@ describe('Snapshot Tools', () => {
       expect(properties?.maxDepth.type).toBe('number');
     });
 
-    it('resolveUidToSelectorTool should require uid', () => {
+    it('resolveUidToSelectorTool should require pageIdx and uid', () => {
       const { properties, required } = resolveUidToSelectorTool.inputSchema;
       expect(properties).toBeDefined();
+      expect(properties?.pageIdx).toBeDefined();
       expect(properties?.uid).toBeDefined();
+      expect(required).toContain('pageIdx');
       expect(required).toContain('uid');
+    });
+
+    it('clearSnapshotTool should require pageIdx', () => {
+      const { properties, required } = clearSnapshotTool.inputSchema;
+      expect(properties).toBeDefined();
+      expect(properties?.pageIdx).toBeDefined();
+      expect(required).toContain('pageIdx');
     });
   });
 });

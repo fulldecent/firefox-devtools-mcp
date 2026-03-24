@@ -11,10 +11,14 @@ const DEFAULT_SNAPSHOT_LINES = 100;
 // Tool definitions
 export const takeSnapshotTool = {
   name: 'take_snapshot',
-  description: 'Capture DOM snapshot with stable UIDs. Retake after navigation.',
+  description: 'Capture DOM snapshot of a page with stable UIDs. Retake after navigation.',
   inputSchema: {
     type: 'object',
     properties: {
+      pageIdx: {
+        type: 'number',
+        description: 'Tab index (0-based) from list_pages',
+      },
       maxLines: {
         type: 'number',
         description: 'Max lines (default: 100)',
@@ -41,6 +45,7 @@ export const takeSnapshotTool = {
         description: 'CSS selector to scope snapshot to specific element (e.g., "#app")',
       },
     },
+    required: ['pageIdx'],
   },
 };
 
@@ -50,12 +55,16 @@ export const resolveUidToSelectorTool = {
   inputSchema: {
     type: 'object',
     properties: {
+      pageIdx: {
+        type: 'number',
+        description: 'Tab index (0-based) from list_pages',
+      },
       uid: {
         type: 'string',
         description: 'UID from snapshot',
       },
     },
-    required: ['uid'],
+    required: ['pageIdx', 'uid'],
   },
 };
 
@@ -64,7 +73,13 @@ export const clearSnapshotTool = {
   description: 'Clear snapshot cache. Usually not needed.',
   inputSchema: {
     type: 'object',
-    properties: {},
+    properties: {
+      pageIdx: {
+        type: 'number',
+        description: 'Tab index (0-based) from list_pages',
+      },
+    },
+    required: ['pageIdx'],
   },
 };
 
@@ -72,20 +87,26 @@ export const clearSnapshotTool = {
 export async function handleTakeSnapshot(args: unknown): Promise<McpToolResponse> {
   try {
     const {
+      pageIdx,
       maxLines: requestedMaxLines = DEFAULT_SNAPSHOT_LINES,
       includeAttributes = false,
       includeText = true,
       maxDepth,
       includeAll = false,
       selector,
-    } = (args as {
+    } = args as {
+      pageIdx: number;
       maxLines?: number;
       includeAttributes?: boolean;
       includeText?: boolean;
       maxDepth?: number;
       includeAll?: boolean;
       selector?: string;
-    }) || {};
+    };
+
+    if (typeof pageIdx !== 'number') {
+      throw new Error('pageIdx parameter is required and must be a number');
+    }
 
     // Apply hard cap on maxLines to prevent token overflow
     const maxLines = Math.min(Math.max(1, requestedMaxLines), TOKEN_LIMITS.MAX_SNAPSHOT_LINES_CAP);
@@ -93,6 +114,14 @@ export async function handleTakeSnapshot(args: unknown): Promise<McpToolResponse
 
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
+
+    // Select the specified tab
+    await firefox.refreshTabs();
+    const tabs = firefox.getTabs();
+    if (pageIdx < 0 || pageIdx >= tabs.length) {
+      throw new Error(`Page [${pageIdx}] not found. ${tabs.length} pages available.`);
+    }
+    await firefox.selectTab(pageIdx);
 
     // Pass snapshot options to manager
     const snapshotOptions: any = {};
@@ -159,7 +188,11 @@ export async function handleTakeSnapshot(args: unknown): Promise<McpToolResponse
 
 export async function handleResolveUidToSelector(args: unknown): Promise<McpToolResponse> {
   try {
-    const { uid } = args as { uid: string };
+    const { pageIdx, uid } = args as { pageIdx: number; uid: string };
+
+    if (typeof pageIdx !== 'number') {
+      throw new Error('pageIdx parameter is required and must be a number');
+    }
 
     if (!uid || typeof uid !== 'string') {
       throw new Error('uid parameter is required and must be a string');
@@ -167,6 +200,14 @@ export async function handleResolveUidToSelector(args: unknown): Promise<McpTool
 
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
+
+    // Select the specified tab
+    await firefox.refreshTabs();
+    const tabs = firefox.getTabs();
+    if (pageIdx < 0 || pageIdx >= tabs.length) {
+      throw new Error(`Page [${pageIdx}] not found. ${tabs.length} pages available.`);
+    }
+    await firefox.selectTab(pageIdx);
 
     try {
       const selector = firefox.resolveUidToSelector(uid);
@@ -179,10 +220,24 @@ export async function handleResolveUidToSelector(args: unknown): Promise<McpTool
   }
 }
 
-export async function handleClearSnapshot(_args: unknown): Promise<McpToolResponse> {
+export async function handleClearSnapshot(args: unknown): Promise<McpToolResponse> {
   try {
+    const { pageIdx } = args as { pageIdx: number };
+
+    if (typeof pageIdx !== 'number') {
+      throw new Error('pageIdx parameter is required and must be a number');
+    }
+
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
+
+    // Select the specified tab
+    await firefox.refreshTabs();
+    const tabs = firefox.getTabs();
+    if (pageIdx < 0 || pageIdx >= tabs.length) {
+      throw new Error(`Page [${pageIdx}] not found. ${tabs.length} pages available.`);
+    }
+    await firefox.selectTab(pageIdx);
 
     firefox.clearSnapshot();
 
