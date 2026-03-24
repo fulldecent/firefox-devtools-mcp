@@ -80,7 +80,7 @@ npx @modelcontextprotocol/inspector npx firefox-devtools-mcp@latest --start-url 
 ```
 
 Then call tools like:
-- `list_pages`, `select_page`, `navigate_page`
+- `list_pages`, `navigate_page` (pass `pageIdx` from `list_pages`)
 - `take_snapshot` then `click_by_uid` / `fill_by_uid`
 - `list_network_requests` (always‑on capture), `get_network_request`
 - `screenshot_page`, `list_console_messages`
@@ -104,12 +104,14 @@ You can pass flags or environment variables (names on the right):
 
 ## Tool overview
 
-- Pages: list/new/navigate/select/close
+All page-aware tools require an explicit `pageId` parameter — the stable window handle returned by `list_pages`. This handle is assigned by Firefox at tab-creation time and does not change if other tabs are opened or closed, making it safe to hold across multi-step workflows. Use `list_pages` first to discover available tabs and their stable IDs.
+
+- Pages: list/new/navigate/close (require stable `pageId` string from `list_pages`)
 - Snapshot/UID: take/resolve/clear
 - Input: click/hover/fill/drag/upload/form fill
 - Network: list/get (ID‑first, filters, always‑on capture)
 - Console: list/clear
-- Screenshot: page/by uid (with optional `saveTo` for CLI environments)
+- Screenshot: page/by uid (requires stable `pageId`; with optional `saveTo` for CLI environments)
 - Script: evaluate_script (content), evaluate_chrome_script (privileged)
 - Chrome Context: list/select chrome contexts (requires `MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1`)
 - WebExtension: install_extension, uninstall_extension, list_extensions (list requires `MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1`)
@@ -122,8 +124,8 @@ When using screenshots in Claude Code CLI, the base64 image data can consume sig
 Use the `saveTo` parameter to save screenshots to disk instead:
 
 ```
-screenshot_page({ saveTo: "/tmp/page.png" })
-screenshot_by_uid({ uid: "abc123", saveTo: "/tmp/element.png" })
+screenshot_page({ pageId: "<handle>", saveTo: "/tmp/page.png" })
+screenshot_by_uid({ pageId: "<handle>", uid: "abc123", saveTo: "/tmp/element.png" })
 ```
 
 The file can then be viewed with Claude Code's `Read` tool without impacting context size.
