@@ -35,26 +35,39 @@ describe('Utilities Tools', () => {
   });
 
   describe('Schema Properties', () => {
-    it('acceptDialogTool should accept promptText', () => {
-      const { properties } = acceptDialogTool.inputSchema;
+    it('acceptDialogTool should require pageIdx and accept promptText', () => {
+      const { properties, required } = acceptDialogTool.inputSchema;
       expect(properties).toBeDefined();
+      expect(properties?.pageIdx).toBeDefined();
       expect(properties?.promptText).toBeDefined();
+      expect(required).toContain('pageIdx');
     });
 
-    it('navigateHistoryTool should require direction with enum', () => {
+    it('dismissDialogTool should require pageIdx', () => {
+      const { properties, required } = dismissDialogTool.inputSchema;
+      expect(properties).toBeDefined();
+      expect(properties?.pageIdx).toBeDefined();
+      expect(required).toContain('pageIdx');
+    });
+
+    it('navigateHistoryTool should require pageIdx and direction with enum', () => {
       const { properties, required } = navigateHistoryTool.inputSchema;
       expect(properties).toBeDefined();
+      expect(properties?.pageIdx).toBeDefined();
       expect(properties?.direction).toBeDefined();
       expect(properties?.direction.enum).toContain('back');
       expect(properties?.direction.enum).toContain('forward');
+      expect(required).toContain('pageIdx');
       expect(required).toContain('direction');
     });
 
-    it('setViewportSizeTool should require width and height', () => {
+    it('setViewportSizeTool should require pageIdx, width and height', () => {
       const { properties, required } = setViewportSizeTool.inputSchema;
       expect(properties).toBeDefined();
+      expect(properties?.pageIdx).toBeDefined();
       expect(properties?.width).toBeDefined();
       expect(properties?.height).toBeDefined();
+      expect(required).toContain('pageIdx');
       expect(required).toContain('width');
       expect(required).toContain('height');
     });

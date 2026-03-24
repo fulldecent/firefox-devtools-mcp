@@ -11,6 +11,10 @@ export const evaluateScriptTool = {
   inputSchema: {
     type: 'object',
     properties: {
+      pageIdx: {
+        type: 'number',
+        description: 'Tab index (from list_pages)',
+      },
       function: {
         type: 'string',
         description: 'JS function string, e.g. () => document.title',
@@ -34,7 +38,7 @@ export const evaluateScriptTool = {
         description: 'Timeout in ms (default: 5000)',
       },
     },
-    required: ['function'],
+    required: ['pageIdx', 'function'],
   },
 };
 
@@ -80,20 +84,27 @@ function validateFunction(fnString: string): void {
 export async function handleEvaluateScript(args: unknown): Promise<McpToolResponse> {
   try {
     const {
+      pageIdx,
       function: fnString,
       args: fnArgs,
       timeout,
     } = args as {
+      pageIdx: number;
       function: string;
       args?: Array<{ uid: string }>;
       timeout?: number;
     };
+
+    if (typeof pageIdx !== 'number') {
+      throw new Error('pageIdx parameter is required and must be a number');
+    }
 
     // Validate function
     validateFunction(fnString);
 
     const { getFirefox } = await import('../index.js');
     const firefox = await getFirefox();
+    await firefox.selectTab(pageIdx);
     const driver = firefox.getDriver();
 
     if (!driver) {

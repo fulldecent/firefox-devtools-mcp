@@ -28,19 +28,25 @@ describe('Screenshot Tools', () => {
   });
 
   describe('Schema Properties', () => {
-    it('screenshotPageTool should have saveTo property', () => {
-      const { properties } = screenshotPageTool.inputSchema;
+    it('screenshotPageTool should require pageIdx and have saveTo property', () => {
+      const { properties, required } = screenshotPageTool.inputSchema;
       expect(properties).toBeDefined();
+      expect(properties?.pageIdx).toBeDefined();
+      expect(properties?.pageIdx?.type).toBe('number');
       expect(properties?.saveTo).toBeDefined();
       expect(properties?.saveTo?.type).toBe('string');
+      expect(required).toContain('pageIdx');
     });
 
-    it('screenshotByUidTool should require uid and have optional saveTo', () => {
+    it('screenshotByUidTool should require pageIdx and uid and have optional saveTo', () => {
       const { properties, required } = screenshotByUidTool.inputSchema;
       expect(properties).toBeDefined();
+      expect(properties?.pageIdx).toBeDefined();
+      expect(properties?.pageIdx?.type).toBe('number');
       expect(properties?.uid).toBeDefined();
       expect(properties?.saveTo).toBeDefined();
       expect(properties?.saveTo?.type).toBe('string');
+      expect(required).toContain('pageIdx');
       expect(required).toContain('uid');
       expect(required).not.toContain('saveTo');
     });
@@ -55,6 +61,7 @@ describe('Screenshot Tools', () => {
 
       vi.doMock('../../src/index.js', () => ({
         getFirefox: vi.fn().mockResolvedValue({
+          selectTab: vi.fn().mockResolvedValue(undefined),
           takeScreenshotPage: vi.fn().mockResolvedValue(FAKE_BASE64),
           takeScreenshotByUid: vi.fn().mockResolvedValue(FAKE_BASE64),
         }),
@@ -71,7 +78,7 @@ describe('Screenshot Tools', () => {
     it('should save screenshot to file when saveTo is provided (page)', async () => {
       const { handleScreenshotPage } = await import('../../src/tools/screenshot.js');
       const filePath = join(tempDir, 'page.png');
-      const result = await handleScreenshotPage({ saveTo: filePath });
+      const result = await handleScreenshotPage({ pageIdx: 0, saveTo: filePath });
 
       expect(result.isError).toBeUndefined();
       expect(result.content).toHaveLength(1);
@@ -89,7 +96,7 @@ describe('Screenshot Tools', () => {
     it('should save screenshot to file when saveTo is provided (by uid)', async () => {
       const { handleScreenshotByUid } = await import('../../src/tools/screenshot.js');
       const filePath = join(tempDir, 'element.png');
-      const result = await handleScreenshotByUid({ uid: 'test-uid', saveTo: filePath });
+      const result = await handleScreenshotByUid({ pageIdx: 0, uid: 'test-uid', saveTo: filePath });
 
       expect(result.isError).toBeUndefined();
       expect(result.content).toHaveLength(1);
@@ -103,7 +110,7 @@ describe('Screenshot Tools', () => {
     it('should create parent directories when they do not exist', async () => {
       const { handleScreenshotPage } = await import('../../src/tools/screenshot.js');
       const filePath = join(tempDir, 'nested', 'deep', 'screenshot.png');
-      const result = await handleScreenshotPage({ saveTo: filePath });
+      const result = await handleScreenshotPage({ pageIdx: 0, saveTo: filePath });
 
       expect(result.isError).toBeUndefined();
       expect(existsSync(filePath)).toBe(true);
@@ -111,7 +118,7 @@ describe('Screenshot Tools', () => {
 
     it('should return image content when saveTo is not provided (page)', async () => {
       const { handleScreenshotPage } = await import('../../src/tools/screenshot.js');
-      const result = await handleScreenshotPage({});
+      const result = await handleScreenshotPage({ pageIdx: 0 });
 
       expect(result.isError).toBeUndefined();
       expect(result.content).toHaveLength(1);
@@ -122,7 +129,7 @@ describe('Screenshot Tools', () => {
 
     it('should return image content when saveTo is not provided (by uid)', async () => {
       const { handleScreenshotByUid } = await import('../../src/tools/screenshot.js');
-      const result = await handleScreenshotByUid({ uid: 'test-uid' });
+      const result = await handleScreenshotByUid({ pageIdx: 0, uid: 'test-uid' });
 
       expect(result.isError).toBeUndefined();
       expect(result.content).toHaveLength(1);
@@ -134,7 +141,7 @@ describe('Screenshot Tools', () => {
     it('should resolve relative saveTo path', async () => {
       const { handleScreenshotPage } = await import('../../src/tools/screenshot.js');
       const relativePath = join(tempDir, 'relative.png');
-      const result = await handleScreenshotPage({ saveTo: relativePath });
+      const result = await handleScreenshotPage({ pageIdx: 0, saveTo: relativePath });
 
       expect(result.isError).toBeUndefined();
       expect((result.content[0] as { type: 'text'; text: string }).text).toContain(relativePath);

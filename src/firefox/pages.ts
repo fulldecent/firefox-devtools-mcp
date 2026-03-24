@@ -143,11 +143,14 @@ export class PageManagement {
    */
   async selectTab(index: number): Promise<void> {
     const handles = await this.driver.getAllWindowHandles();
-    if (index >= 0 && index < handles.length) {
-      await this.driver.switchTo().window(handles[index]!);
-      this.setCurrentContextId(handles[index]!);
-      this.cachedSelectedIdx = index;
+    if (index < 0 || index >= handles.length) {
+      throw new Error(
+        `Page [${index}] not found. Use list_pages to see available pages (0-${handles.length - 1}).`
+      );
     }
+    await this.driver.switchTo().window(handles[index]!);
+    this.setCurrentContextId(handles[index]!);
+    this.cachedSelectedIdx = index;
   }
 
   /**
