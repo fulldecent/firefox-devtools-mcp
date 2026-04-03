@@ -174,8 +174,7 @@ export class FirefoxCore {
         .setFirefoxService(serviceBuilder)
         .build();
     } catch (launchError: unknown) {
-      const errorMessage =
-        launchError instanceof Error ? launchError.message : String(launchError);
+      const errorMessage = launchError instanceof Error ? launchError.message : String(launchError);
 
       // Detect the "process exited immediately" scenario
       if (
@@ -189,26 +188,26 @@ export class FirefoxCore {
         if (diag.browserRunning) {
           hints.push(
             `DIAGNOSIS: Found ${diag.runningProcesses.length} running "${diag.binaryName}" process(es). ` +
-            `Firefox-based browsers can only run one instance per profile at a time. ` +
-            `The launched process exited immediately because it handed off to the already-running instance, ` +
-            `and the WebDriver lost its connection.`
+              `Firefox-based browsers can only run one instance per profile at a time. ` +
+              `The launched process exited immediately because it handed off to the already-running instance, ` +
+              `and the WebDriver lost its connection.`
           );
           hints.push(
             `FIX: Quit all instances of "${diag.binaryName}" (including all profiles/windows) before retrying. ` +
-            `On macOS: Cmd+Q or "pkill -f ${diag.binaryName}". Then call restart_firefox to let this server launch its own instance.`
+              `On macOS: Cmd+Q or "pkill -f ${diag.binaryName}". Then call restart_firefox to let this server launch its own instance.`
           );
         }
 
         if (diag.profileLocked && this.options.profilePath) {
           hints.push(
             `DIAGNOSIS: The profile at "${this.options.profilePath}" has a lock file (.parentlock), ` +
-            `indicating another browser instance is using it or was not shut down cleanly.`
+              `indicating another browser instance is using it or was not shut down cleanly.`
           );
           if (!diag.browserRunning) {
             hints.push(
               `FIX: No running browser was detected, so the lock file may be stale from a crash. ` +
-              `Try deleting the lock file: rm "${join(this.options.profilePath, '.parentlock')}" ` +
-              `and then retry.`
+                `Try deleting the lock file: rm "${join(this.options.profilePath, '.parentlock')}" ` +
+                `and then retry.`
             );
           }
         }
@@ -216,16 +215,14 @@ export class FirefoxCore {
         if (hints.length === 0) {
           hints.push(
             `DIAGNOSIS: The browser process exited immediately after launch (status 0) but no running ` +
-            `browser instance was detected. This could be a geckodriver or binary compatibility issue. ` +
-            `Check that the Firefox binary path is correct and that geckodriver is compatible.`
+              `browser instance was detected. This could be a geckodriver or binary compatibility issue. ` +
+              `Check that the Firefox binary path is correct and that geckodriver is compatible.`
           );
         }
 
-        const diagnosticMessage = [
-          `Failed to launch browser: ${errorMessage}`,
-          '',
-          ...hints,
-        ].join('\n');
+        const diagnosticMessage = [`Failed to launch browser: ${errorMessage}`, '', ...hints].join(
+          '\n'
+        );
 
         log(diagnosticMessage);
         throw new Error(diagnosticMessage);
